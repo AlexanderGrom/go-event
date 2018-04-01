@@ -10,7 +10,7 @@ $ go get -u github.com/AlexanderGrom/go-event
 
 ## Examples
 ```go
-e := New()
+e := event.New()
 e.On("my.event.name.1", func() error {
     fmt.Println("Fire event")
     return nil
@@ -42,29 +42,29 @@ A couple more examples
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/AlexanderGrom/go-event"
+    "github.com/AlexanderGrom/go-event"
 )
 
 func EventFunc(text string) error {
-	fmt.Println("Fire:", text, "1")
-	return nil
+    fmt.Println("Fire:", text, "1")
+    return nil
 }
 
 type EventStruct struct{}
 
 func (e *EventStruct) EventFunc(text string) error {
-	fmt.Println("Fire:", text, "2")
-	return nil
+    fmt.Println("Fire:", text, "2")
+    return nil
 }
 
 func main() {
-	event.On("my.event.name.1", EventFunc)
-	event.On("my.event.name.1", (&EventStruct{}).EventFunc)
+    event.On("my.event.name.1", EventFunc)
+    event.On("my.event.name.1", (&EventStruct{}).EventFunc)
 
-	event.Go("my.event.name.1", "event")
-	// Print: Fire event 1
-	// Print: Fire event 2
+    event.Go("my.event.name.1", "event")
+    // Print: Fire event 1
+    // Print: Fire event 2
 }
 ```

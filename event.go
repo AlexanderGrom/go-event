@@ -1,4 +1,3 @@
-// Package event is a simple event system.
 package event
 
 import (
