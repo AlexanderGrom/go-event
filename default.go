@@ -34,6 +34,6 @@ func List() []string {
 }
 
 // Remove delete events from the event list from the default source.
-func Remove(name ...string) {
-	globalSource.Remove(name...)
+func Remove(names ...string) {
+	globalSource.Remove(names...)
 }

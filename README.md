@@ -68,3 +68,77 @@ func main() {
     // Print: Fire event 2
 }
 ```
+
+### A more complex example
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/AlexanderGrom/go-event"
+)
+
+type (
+    Context interface{}
+    Event   interface {
+        Name() string
+        Handle(ctx Context) error
+    }
+)
+
+// ...
+
+type (
+    sumContext struct {
+        i, j int
+    }
+
+    sumEvent struct {
+        name string
+    }
+)
+
+func NewSumContext(i, j int) Context {
+    return sumContext{i, j}
+}
+
+func NewSumEvent() Event {
+    return &sumEvent{
+        name: "my.sum.event",
+    }
+}
+
+func (e *sumEvent) Name() string {
+    return e.name
+}
+
+func (e *sumEvent) Handle(ctx Context) error {
+    c := ctx.(sumContext)
+    fmt.Println("Fire", c.i+c.j)
+    return nil
+}
+
+// ...
+
+func main() {
+    e := event.New()
+
+    // Collection
+    collect := []Event{
+        NewSumEvent(),
+        // ...
+    }
+
+    // Registration
+    for _, evt := range collect {
+        e.On(evt.Name(), evt.Handle)
+    }
+
+    // ...
+
+    e.Go("my.sum.event", NewSumContext(1, 2))
+    // Print: Fire 3
+}
+```
