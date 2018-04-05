@@ -54,6 +54,10 @@ func TestOn(t *testing.T) {
 			name:      "test.event.on.7",
 			fn:        "func",
 			assertion: assert.Error,
+		}, {
+			name:      "test.event.on.8",
+			fn:        func(e Event) error { return nil },
+			assertion: assert.NoError,
 		},
 	}
 
@@ -138,7 +142,32 @@ func TestGo(t *testing.T) {
 			params:    []interface{}{},
 			count:     0,
 			assertion: assert.NoError,
+		}, {
+			name:      "test.event.go.10",
+			fn:        func(e Event) error { return nil },
+			params:    []interface{}{nil},
+			count:     0,
+			assertion: assert.NoError,
+		}, {
+			name:      "test.event.go.11",
+			fn:        func(e Event) error { return nil },
+			params:    []interface{}{},
+			count:     0,
+			assertion: assert.Error,
+		}, {
+			name:      "test.event.go.12",
+			fn:        func(i int, j ...int) error { return nil },
+			params:    []interface{}{},
+			count:     0,
+			assertion: assert.Error,
+		}, {
+			name:      "test.event.go.13",
+			fn:        func(i int) error { return nil },
+			params:    []interface{}{},
+			count:     0,
+			assertion: assert.Error,
 		},
+		// Добавить проверки на отсутствующие параметры 3 штуки!!!
 	}
 
 	e := New()

@@ -13,8 +13,8 @@ type event struct {
 	events map[string][]interface{}
 }
 
-// New returns a new event.Event
-func New() Event {
+// New returns a new event.Dispatcher
+func New() Dispatcher {
 	return &event{
 		events: make(map[string][]interface{}),
 	}
@@ -25,10 +25,15 @@ func (e *event) On(name string, fn interface{}) error {
 	e.Lock()
 	defer e.Unlock()
 
-	t := reflect.TypeOf(fn)
 	if fn == nil {
 		return errors.New("fn is nil")
 	}
+	if _, ok := fn.(handle); ok {
+		e.events[name] = append(e.events[name], fn)
+		return nil
+	}
+
+	t := reflect.TypeOf(fn)
 	if t.Kind() != reflect.Func {
 		return errors.New("fn is not a function")
 	}
@@ -38,7 +43,6 @@ func (e *event) On(name string, fn interface{}) error {
 	if t.Out(0) != reflect.TypeOf((*error)(nil)).Elem() {
 		return errors.New("fn must return an error message")
 	}
-
 	if list, ok := e.events[name]; ok && len(list) > 0 {
 		tt := reflect.TypeOf(list[0])
 		if tt.NumIn() != t.NumIn() {
@@ -68,13 +72,25 @@ func (e *event) Go(name string, params ...interface{}) error {
 }
 
 func (e *event) call(fn interface{}, params ...interface{}) error {
-	f := reflect.ValueOf(fn)
-	t := f.Type()
+	if f, ok := fn.(handle); ok {
+		if len(params) != 1 {
+			return errors.New("parameters mismatched")
+		}
+		return f(params[0])
+	}
 
-	var result []reflect.Value
-	var in = make([]reflect.Value, 0, t.NumIn())
+	var (
+		f     = reflect.ValueOf(fn)
+		t     = f.Type()
+		numIn = t.NumIn()
+		in    = make([]reflect.Value, 0, numIn)
+	)
+
 	if t.IsVariadic() {
-		n := t.NumIn() - 1
+		n := numIn - 1
+		if len(params) < n {
+			return errors.New("parameters mismatched")
+		}
 		for _, param := range params[:n] {
 			in = append(in, reflect.ValueOf(param))
 		}
@@ -83,15 +99,19 @@ func (e *event) call(fn interface{}, params ...interface{}) error {
 			s = reflect.Append(s, reflect.ValueOf(param))
 		}
 		in = append(in, s)
-		result = f.CallSlice(in)
-	} else {
-		for _, param := range params {
-			in = append(in, reflect.ValueOf(param))
-		}
-		result = f.Call(in)
+
+		err, _ := f.CallSlice(in)[0].Interface().(error)
+		return err
 	}
 
-	err, _ := result[0].Interface().(error)
+	if len(params) != numIn {
+		return errors.New("parameters mismatched")
+	}
+	for _, param := range params {
+		in = append(in, reflect.ValueOf(param))
+	}
+
+	err, _ := f.Call(in)[0].Interface().(error)
 	return err
 }
 

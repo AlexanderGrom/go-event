@@ -81,41 +81,40 @@ import (
 )
 
 type (
-    Context interface{}
-    Event   interface {
+    Listener interface {
         Name() string
-        Handle(ctx Context) error
+        Handle(e event.Event) error
     }
 )
 
 // ...
 
 type (
-    sumContext struct {
+    fooEvent struct {
         i, j int
     }
 
-    sumEvent struct {
+    fooListener struct {
         name string
     }
 )
 
-func NewSumContext(i, j int) Context {
-    return sumContext{i, j}
+func NewFooEvent(i, j int) event.Event {
+    return fooEvent{i, j}
 }
 
-func NewSumEvent() Event {
-    return &sumEvent{
-        name: "my.sum.event",
+func NewFooListener() Listener {
+    return &fooListener{
+        name: "my.foo.event",
     }
 }
 
-func (e *sumEvent) Name() string {
-    return e.name
+func (l *fooListener) Name() string {
+    return l.name
 }
 
-func (e *sumEvent) Handle(ctx Context) error {
-    c := ctx.(sumContext)
+func (l *fooListener) Handle(e event.Event) error {
+    c := e.(fooEvent)
     fmt.Println("Fire", c.i+c.j)
     return nil
 }
@@ -126,19 +125,22 @@ func main() {
     e := event.New()
 
     // Collection
-    collect := []Event{
-        NewSumEvent(),
+    collect := []Listener{
+        NewFooListener(),
         // ...
-    }
-
-    // Registration
-    for _, evt := range collect {
-        e.On(evt.Name(), evt.Handle)
     }
 
     // ...
 
-    e.Go("my.sum.event", NewSumContext(1, 2))
+    // Registration
+    for _, l := range collect {
+        e.On(l.Name(), l.Handle)
+    }
+
+    // ...
+
+    // Call
+    e.Go("my.foo.event", NewFooEvent(1, 2))
     // Print: Fire 3
 }
 ```

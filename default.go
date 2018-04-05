@@ -1,14 +1,20 @@
 // Package event is a simple event system.
 package event
 
-// Event package interface
-type Event interface {
+// Dispatcher event interface
+type Dispatcher interface {
 	On(name string, fn interface{}) error
 	Go(name string, params ...interface{}) error
 	Has(name string) bool
 	List() []string
 	Remove(names ...string)
 }
+
+// Event to handle
+type Event interface{}
+
+// handle aliase
+type handle = func(Event) error
 
 // Default event instance
 var globalSource = New()
