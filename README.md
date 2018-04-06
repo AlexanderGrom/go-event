@@ -83,7 +83,7 @@ import (
 type (
     Listener interface {
         Name() string
-        Handle(e event.Event) error
+        Handle(e event.Eventer) error
     }
 )
 
@@ -91,6 +91,8 @@ type (
 
 type (
     fooEvent struct {
+        event.Event
+
         i, j int
     }
 
@@ -99,8 +101,8 @@ type (
     }
 )
 
-func NewFooEvent(i, j int) event.Event {
-    return fooEvent{i, j}
+func NewFooEvent(i, j int) event.Eventer {
+    return &fooEvent{i:i, j:j}
 }
 
 func NewFooListener() Listener {
@@ -113,9 +115,11 @@ func (l *fooListener) Name() string {
     return l.name
 }
 
-func (l *fooListener) Handle(e event.Event) error {
-    c := e.(fooEvent)
-    fmt.Println("Fire", c.i+c.j)
+func (l *fooListener) Handle(e event.Eventer) error {
+    ev := e.(*fooEvent)
+    ev.StopPropagation()
+
+    fmt.Println("Fire", ev.i+ev.j)
     return nil
 }
 

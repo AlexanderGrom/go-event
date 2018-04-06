@@ -10,12 +10,6 @@ type Dispatcher interface {
 	Remove(names ...string)
 }
 
-// Event to handle
-type Event interface{}
-
-// handle aliase
-type handle = func(Event) error
-
 // Default event instance
 var globalSource = New()
 

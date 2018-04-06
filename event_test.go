@@ -74,6 +74,10 @@ func TestGo(t *testing.T) {
 	type str struct {
 		count int
 	}
+	type event struct {
+		Event
+		count int
+	}
 	counter := 0
 	testCases := []struct {
 		name      string
@@ -144,30 +148,46 @@ func TestGo(t *testing.T) {
 			assertion: assert.NoError,
 		}, {
 			name:      "test.event.go.10",
-			fn:        func(e Event) error { return nil },
-			params:    []interface{}{nil},
+			fn:        func(e Eventer) error { ev, _ := e.(*event); counter = ev.count; counter++; return nil },
+			params:    []interface{}{&event{count: 1}},
+			count:     2,
+			assertion: assert.NoError,
+		}, {
+			name: "test.event.go.10",
+			fn: func(e Eventer) error {
+				ev, _ := e.(*event)
+				ev.StopPropagation()
+				counter = 0
+				return nil
+			},
+			params:    []interface{}{&event{}},
 			count:     0,
 			assertion: assert.NoError,
 		}, {
 			name:      "test.event.go.11",
-			fn:        func(e Event) error { return nil },
+			fn:        func(e Eventer) error { return nil },
 			params:    []interface{}{},
 			count:     0,
 			assertion: assert.Error,
 		}, {
 			name:      "test.event.go.12",
+			fn:        func(e Eventer) error { return nil },
+			params:    []interface{}{str{}},
+			count:     0,
+			assertion: assert.Error,
+		}, {
+			name:      "test.event.go.13",
 			fn:        func(i int, j ...int) error { return nil },
 			params:    []interface{}{},
 			count:     0,
 			assertion: assert.Error,
 		}, {
-			name:      "test.event.go.13",
+			name:      "test.event.go.14",
 			fn:        func(i int) error { return nil },
 			params:    []interface{}{},
 			count:     0,
 			assertion: assert.Error,
 		},
-		// Добавить проверки на отсутствующие параметры 3 штуки!!!
 	}
 
 	e := New()
